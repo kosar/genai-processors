@@ -12,7 +12,6 @@ dist/
 # VENV.
 .venv
 venv
-gen-lang-client-0*.json
 
 # Test files.
 .nox/

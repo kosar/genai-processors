@@ -181,3 +181,34 @@ Here’s a breakdown of the task:
     *   Provide instructions for deploying the application to a cloud platform such as Vercel, Google Cloud, or AWS.
 
 Your solution should be well-documented, with clear instructions on how to set up and run the application. The code should be clean, efficient, and easy to maintain. You should also consider potential challenges, such as handling long-running requests and managing the state of the application.
+
+## Guidance for Cloud Architects
+
+As a cloud architect, your goal is to design a scalable, resilient, and cost-effective infrastructure for deploying applications built with the GenAI Processors library. Here's a guide to help you make informed decisions when building out a plan for your platform.
+
+### Understanding GenAI Processors
+
+The GenAI Processors library is designed to be lightweight and flexible, allowing developers to build complex AI pipelines by chaining together modular processors. The core of the library is the `Processor` class, which operates on asynchronous streams of `ProcessorPart` objects. This architecture has several implications for deployment:
+
+*   **Statelessness:** Processors are generally stateless, meaning they don't retain any information between requests. This makes them easy to scale horizontally.
+*   **Asynchronous Nature:** The library is built on `asyncio`, making it well-suited for I/O-bound tasks and real-time applications.
+*   **Local Model Dependency:** The example application uses a locally hosted Ollama model. In a production environment, you will need to decide whether to continue using a local model or switch to a managed AI service.
+
+### Deployment Patterns
+
+Here are a few deployment patterns to consider, depending on your specific requirements:
+
+*   **Serverless:** For applications with intermittent traffic, a serverless approach (e.g., AWS Lambda, Google Cloud Functions) can be a cost-effective option. You can package the FastAPI application and its dependencies into a container image and deploy it as a serverless function.
+*   **Container Orchestration:** For applications with high traffic or long-running requests, a container orchestration platform (e.g., Kubernetes, Amazon ECS) is a better choice. This will allow you to scale the application horizontally and manage the containers effectively.
+*   **Managed AI Services:** If you prefer not to manage your own AI models, you can use a managed AI service (e.g., Google AI Platform, Amazon SageMaker). The GenAI Processors library can be easily adapted to work with these services by creating a custom processor that calls the service's API.
+
+### Best Practices
+
+Here are some best practices to follow when deploying a GenAI Processors application on your platform:
+
+*   **Infrastructure as Code (IaC):** Use a tool like Terraform or AWS CloudFormation to define your infrastructure as code. This will make it easier to manage and reproduce your environment.
+*   **CI/CD:** Set up a CI/CD pipeline to automate the process of building, testing, and deploying your application.
+*   **Monitoring and Logging:** Use a monitoring and logging service to track the performance of your application and identify any issues.
+*   **Security:** Follow security best practices to protect your application and data. This includes using a firewall, encrypting data in transit and at rest, and managing access to your resources.
+
+By following these guidelines, you can design a robust and scalable infrastructure for your GenAI Processors application that will meet the needs of your users and your business.
