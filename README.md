@@ -106,6 +106,9 @@ Explore the [examples/](examples/) directory for practical demonstrations:
     commentary agent built with the
     [Gemini Live API](https://ai.google.dev/gemini-api/docs/live), composed of
     two agents: one for event detection and one for managing the conversation.
+*   [Real-time Sentiment Analysis](./examples/sentiment_analysis/README.md) - a
+    demonstration of how to use `genai` processors to perform real-time
+    sentiment analysis on a stream of social media data.
 
 ## 🧩 Built-in Processors
 

@@ -1,0 +1,27 @@
+body {
+    font-family: sans-serif;
+}
+
+#posts {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.post {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    border-radius: 5px;
+}
+
+.post.positive {
+    background-color: #d4edda;
+}
+
+.post.negative {
+    background-color: #f8d7da;
+}
+
+.post.neutral {
+    background-color: #e2e3e5;
+}

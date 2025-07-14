@@ -23,7 +23,7 @@ from typing import Any, TypeVar
 
 from absl import logging
 from genai_processors import mime_types
-from google.genai import types as genai_types
+import google.generativeai as genai
 import PIL.Image
 
 
@@ -69,7 +69,7 @@ class ProcessorPart:
     self._metadata = {}
 
     match value:
-      case genai_types.Part():
+      case genai.types.Part():
         self._part = value
       case ProcessorPart():
         self._part = value.part
@@ -78,14 +78,14 @@ class ProcessorPart:
         mimetype = mimetype or value.mimetype
         self._metadata.update(value.metadata)
       case str():
-        self._part = genai_types.Part(text=value)
+        self._part = genai.types.Part(text=value)
       case bytes():
         if not mimetype:
           raise ValueError(
               'MIME type must be specified when constructing a ProcessorPart'
               ' from bytes.'
           )
-        self._part = genai_types.Part.from_bytes(data=value, mime_type=mimetype)
+        self._part = genai.types.Part.from_bytes(data=value, mime_type=mimetype)
       case PIL.Image.Image():
         if mimetype:
           # If the mimetype is explicitly specified, ensure it is an image.
@@ -106,7 +106,7 @@ class ProcessorPart:
           mimetype = f'image/{suffix}'
         bytes_io = io.BytesIO()
         value.save(bytes_io, suffix.upper())
-        self._part = genai_types.Part.from_bytes(
+        self._part = genai.types.Part.from_bytes(
             data=bytes_io.getvalue(), mime_type=mimetype
         )
       case _:
@@ -150,7 +150,7 @@ class ProcessorPart:
     )
 
   @property
-  def part(self) -> genai_types.Part:
+  def part(self) -> genai.types.Part:
     """Returns the underlying Genai Part."""
     return self._part
 
@@ -180,7 +180,7 @@ class ProcessorPart:
     """
     if self.part.text:
       return self.text.encode()
-    if isinstance(self.part.inline_data, genai_types.Blob):
+    if isinstance(self.part.inline_data, genai.types.Blob):
       return self.part.inline_data.data
     return None
 
@@ -223,7 +223,7 @@ class ProcessorPart:
   @text.setter
   def text(self, value: str) -> None:
     """Sets part to a text part."""
-    self._part = genai_types.Part(text=value)
+    self._part = genai.types.Part(text=value)
 
   @property
   def metadata(self) -> dict[str, Any]:
@@ -240,12 +240,12 @@ class ProcessorPart:
     return self._metadata.get(key, default)
 
   @property
-  def function_call(self) -> genai_types.FunctionCall | None:
+  def function_call(self) -> genai.types.FunctionCall | None:
     """Returns function call."""
     return self.part.function_call
 
   @property
-  def function_response(self) -> genai_types.FunctionResponse | None:
+  def function_response(self) -> genai.types.FunctionResponse | None:
     """Returns function response."""
     return self.part.function_response
 
@@ -305,7 +305,7 @@ class ProcessorPart:
       cls, *, file_uri: str, mimetype: str, **kwargs
   ) -> 'ProcessorPart':
     """Constructs a ProcessorPart from URI & mimetype."""
-    part = genai_types.Part.from_uri(file_uri=file_uri, mime_type=mimetype)
+    part = genai.types.Part.from_uri(file_uri=file_uri, mime_type=mimetype)
     return cls(part, **kwargs)
 
   @classmethod
@@ -313,7 +313,7 @@ class ProcessorPart:
       cls, *, name: str, args: dict[str, Any], **kwargs
   ) -> 'ProcessorPart':
     """Constructs a ProcessorPart from bytes & mimetype."""
-    part = genai_types.Part.from_function_call(name=name, args=args)
+    part = genai.types.Part.from_function_call(name=name, args=args)
     return cls(part, **kwargs)
 
   @classmethod
@@ -324,12 +324,12 @@ class ProcessorPart:
       response: dict[str, Any],
       function_call_id: str | None = None,
       will_continue: bool = False,
-      scheduling: genai_types.FunctionResponseScheduling | None = None,
+      scheduling: genai.types.FunctionResponseScheduling | None = None,
       **kwargs,
   ) -> 'ProcessorPart':
     """Constructs a ProcessorPart as a function response."""
-    part = genai_types.Part(
-        function_response=genai_types.FunctionResponse(
+    part = genai.types.Part(
+        function_response=genai.types.FunctionResponse(
             id=function_call_id,
             name=name,
             response=response,
@@ -341,18 +341,18 @@ class ProcessorPart:
 
   @classmethod
   def from_executable_code(
-      cls, *, code: str, language: genai_types.Language, **kwargs
+      cls, *, code: str, language: genai.types.Language, **kwargs
   ) -> 'ProcessorPart':
     """Constructs a ProcessorPart as an executable code part."""
-    part = genai_types.Part.from_executable_code(code=code, language=language)
+    part = genai.types.Part.from_executable_code(code=code, language=language)
     return cls(part, **kwargs)
 
   @classmethod
   def from_code_execution_result(
-      cls, *, outcome: genai_types.Outcome, output: str, **kwargs
+      cls, *, outcome: genai.types.Outcome, output: str, **kwargs
   ) -> 'ProcessorPart':
     """Constructs a ProcessorPart as a code execution result part."""
-    part = genai_types.Part.from_code_execution_result(
+    part = genai.types.Part.from_code_execution_result(
         outcome=outcome, output=output
     )
     return cls(part, **kwargs)
@@ -372,7 +372,7 @@ class ProcessorPart:
     Returns:
       A ProcessorPart of type tool cancellation.
     """
-    part = genai_types.Part.from_function_response(
+    part = genai.types.Part.from_function_response(
         name='tool_cancellation',
         response={'function_call_id': function_call_id},
     )
@@ -431,7 +431,7 @@ class ProcessorPart:
     ```
     """
     return cls(
-        genai_types.Part.model_validate(data['part']),
+        genai.types.Part.model_validate(data['part']),
         role=data.get('role', ''),
         substream_name=data.get('substream_name', ''),
         mimetype=data.get('mimetype'),
@@ -505,7 +505,7 @@ class ProcessorContent:
     """Appends other to the content."""
     if isinstance(other, ProcessorContent):
       self += other.all_parts
-    elif isinstance(other, genai_types.Content):
+    elif isinstance(other, genai.types.Content):
       if other.parts:
         if other.role:
           parts = [ProcessorPart(part, role=other.role) for part in other.parts]
@@ -596,7 +596,7 @@ def is_end_of_turn(part: ProcessorPart) -> bool:
 
 # Types that can be converted to a ProcessorPart.
 ProcessorPartTypes = (
-    genai_types.Part
+    genai.types.Part
     | ProcessorPart
     | str
     | bytes
@@ -609,8 +609,8 @@ ProcessorContentTypes = (
     | ProcessorPartTypes
     | Iterable[ProcessorContent]
     | Iterable[ProcessorPartTypes]
-    | genai_types.Content
-    | Iterable[genai_types.Content]
+    | genai.types.Content
+    | Iterable[genai.types.Content]
 )
 
 # Helper functions for building content.
@@ -791,7 +791,7 @@ def as_videos(
 def to_genai_part(
     part_content: ProcessorPartTypes,
     mimetype: str | None = None,
-) -> genai_types.Part:
+) -> genai.types.Part:
   """Converts object of type `ProcessorPartTypes` to a Genai Part.
 
   Args:
@@ -803,7 +803,7 @@ def to_genai_part(
     The Genai Part representation of the content.
   """
   if isinstance(part_content, str):
-    return genai_types.Part(text=part_content)
+    return genai.types.Part(text=part_content)
   elif isinstance(part_content, bytes):
     if mimetype is None:
       raise ValueError(
@@ -816,7 +816,7 @@ def to_genai_part(
     return p.part
   elif isinstance(part_content, ProcessorPart):
     return part_content.part
-  elif isinstance(part_content, genai_types.Part):
+  elif isinstance(part_content, genai.types.Part):
     return part_content
   else:
     raise ValueError(
